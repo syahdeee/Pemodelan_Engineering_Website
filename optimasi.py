@@ -140,7 +140,6 @@ def print_model_summary(model):
     st.code(model_summary)
 
 def optimasi_func():
-    save_model = False
     #File uploader
     uploaded_file = st.file_uploader("Upload data dalam format xlsx/xls", type=["xlsx", "xls"])
     display_button = st.button("Display Dataset")
@@ -153,7 +152,7 @@ def optimasi_func():
             st.stop()
 
     if display_button and 'df' in locals():
-        df = df[:100]
+        # df = df[:100]
         st.write("Dataset:")
         st.write(df)
     
