@@ -31,7 +31,7 @@ def predict():
             st.stop()
 
     if display_button and 'df' in locals():
-        df = df[:100]
+        # df = df[:100]
         st.write("Dataset:")
         st.write(df)
 

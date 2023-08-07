@@ -2,11 +2,7 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 from sklearn.preprocessing import MinMaxScaler
 from optimasi import optimasi_func
-from optimasi import normalisasi_input
-from optimasi import normalisasi_output
-from optimasi import get_best_hyperparameter
-from optimasi import get_model
-from optimasi import print_model_summary
+from visualisasi import showHeatmap
 from prediksi import predict
 
 import tensorflow as tf
@@ -18,15 +14,16 @@ def home():
     # st.sidebar.title(f"Hello {nama}")
     with st.sidebar:
         selected = option_menu(None, ["Prediksi", "Optimasi dan Learning", "Visualisasi Heatmap", "Feature Selection", "Ensemble Learning"],
-        icons=['house', 'graph-up', 'gear-fill'], menu_icon="cast", default_index=0)
+        icons=['graph-up', 'gear-fill', 'bar-chart-fill', 'file-bar-graph','diagram-3-fill'], menu_icon="cast", default_index=0)
         
     if (selected == 'Prediksi'):
         predict()
     if (selected == 'Optimasi dan Learning'):
         with st.container():
             st.markdown("<h5 style='text-align : center;'>Optimasi Hyperparameter dengan Multilayer Perceptron (MLP)</h5>", unsafe_allow_html=True)
-            
             optimasi_func()
+    if (selected == "Visualisasi Heatmap"):
+        showHeatmap()
              
 
 def landing_page():
