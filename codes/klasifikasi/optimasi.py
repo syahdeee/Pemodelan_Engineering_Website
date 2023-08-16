@@ -3,10 +3,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow_addons as tfa
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from bayes_opt import BayesianOptimization
 from keras.models import Sequential
 from sklearn.metrics import r2_score
-from sklearn.metrics import make_scorer
+from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from keras.layers import Dense, Dropout
@@ -15,6 +16,7 @@ from keras.callbacks import EarlyStopping
 from scikeras.wrappers import KerasRegressor
 from sklearn.metrics import mean_squared_error
 import streamlit as st
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from tkinter import filedialog
 import tkinter as tk
 import streamlit as st
@@ -47,7 +49,7 @@ def normalisasi_output(output):
 
 
 def get_best_hyperparameter(
-    params_nn2, inputs_opt_act, X_train, X_test, y_train, y_test
+    params_nn2, inputs_opt_act, X_train, X_test, y_train, y_test, num_classes
 ):
     activations = inputs_opt_act[0]
     optimizers = inputs_opt_act[1]
@@ -114,23 +116,30 @@ def get_best_hyperparameter(
                         Dropout(dropout)
                     )  # Create the Dropout layer instance and add it to the model
 
-            nn.add(Dense(1, activation="sigmoid"))
+            nn.add(Dense(num_classes, activation="sigmoid"))
             nn.compile(
-                loss="binary_crossentropy", optimizer=optimizer, metrics=["accuracy"]
+                loss="categorical_crossentropy",
+                optimizer=optimizer,
+                metrics=["accuracy"],
             )
-
             return nn
 
         es = EarlyStopping(monitor="loss", patience=20, verbose=0)
-        nn = KerasRegressor(
-            model=nn_cl_fun, epochs=epochs, batch_size=batch_size, verbose=0
+        nn = nn_cl_fun()
+        nn.fit(
+            X_train,
+            y_train,
+            epochs=epochs,
+            batch_size=batch_size,
+            verbose=0,
+            callbacks=[es],
         )
-
-        nn.fit(X_train, y_train)
         y_pred = nn.predict(X_test)
-        r2 = r2_score(y_test, y_pred)
+        y_pred_classes = np.argmax(y_pred, axis=1)
+        y_test_classes = np.argmax(y_test, axis=1)
+        accuracy = accuracy_score(y_test_classes, y_pred_classes)
 
-        return r2
+        return accuracy
 
     tuner = BayesianOptimization(nn_cl_bo2, params_nn2, random_state=111)
 
@@ -141,7 +150,7 @@ def get_best_hyperparameter(
     return params_nn_
 
 
-def get_model(params_nn_, X_train):
+def get_model(params_nn_, X_train, num_classes):
     nn = Sequential()
     nn.add(
         Dense(
@@ -172,14 +181,14 @@ def get_model(params_nn_, X_train):
                     Dropout(0.1, seed=123)
                 )  # Add Dropout layer with 0.1 dropout rate and seed
 
-    nn.add(Dense(1, activation="sigmoid"))
+    nn.add(Dense(num_classes, activation="sigmoid"))
 
-    # Compile the model using the custom metric function
     nn.compile(
-        loss="mean_squared_error",
+        loss="categorical_crossentropy",
         optimizer=params_nn_["optimizer"],
-        metrics=tfa.metrics.r_square.RSquare(),
+        metrics=["accuracy"],
     )
+
     return nn
 
 
@@ -193,7 +202,7 @@ def print_model_summary(model):
     st.code(model_summary)
 
 
-def optimasi_func():
+def optimasi_klasifikasi():
     # File uploader
     uploaded_file = st.file_uploader(
         "Upload data dalam format xlsx/xls/csv", type=["xlsx", "xls", "csv"]
@@ -202,10 +211,13 @@ def optimasi_func():
 
     if uploaded_file is not None:
         try:
-            df = pd.read_excel(uploaded_file)
+            if uploaded_file.name.endswith(".csv"):
+                df = pd.read_csv(uploaded_file, sep=",")
+            else:
+                df = pd.read_excel(uploaded_file)
         except Exception as e:
             st.error(
-                f"Error: Unable to read the file. Please make sure it's a valid Excel file. Exception: {e}"
+                f"Error: Unable to read the file. Please make sure it's a valid Excel or CSV file. Exception: {e}"
             )
             st.stop()
 
@@ -377,22 +389,29 @@ def optimasi_func():
         if st.button("Next"):
             X = df[features_input]
             y = np.array(df[feature_output])
-            y = np.reshape(y, (-1, 1))
+            num_classes = df[feature_output].nunique()
 
             # Normalisasi input dan output
             x_scaled = normalisasi_input(X)
-            y_scaled = normalisasi_output(y)
+            le = LabelEncoder()
+            y_encode = le.fit_transform(y)
 
-            # Define the scoring function (example using R^2 score)
-            score_acc = make_scorer(r2_score)
+            # One-hot encode the target classes
+            onehot_encoder = OneHotEncoder(sparse=False)
+            y_onehot = onehot_encoder.fit_transform(y_encode.reshape(-1, 1))
 
-            # Data Splitting
             X_train, X_test, y_train, y_test = train_test_split(
-                x_scaled, y_scaled, test_size=testSize, random_state=42
+                x_scaled, y_onehot, test_size=testSize, random_state=42
             )
 
             params_nn_ = get_best_hyperparameter(
-                hyperparams, inputs_opt_act, X_train, X_test, y_train, y_test
+                hyperparams,
+                inputs_opt_act,
+                X_train,
+                X_test,
+                y_train,
+                y_test,
+                num_classes,
             )
 
             learning_rate = params_nn_["learning_rate"]
@@ -438,7 +457,7 @@ def optimasi_func():
             st.write("Dropout : ", params_nn_["dropout"])
 
             # # Get model
-            model = get_model(params_nn_, X_train)
+            model = get_model(params_nn_, X_train, num_classes)
 
             print_model_summary(model)
 
@@ -462,40 +481,42 @@ def optimasi_func():
                 return graph
 
             y_pred = model.predict(X_test)
-            r2 = r2_score(y_test, y_pred)
-            mse = mean_squared_error(y_test, y_pred)
+            y_pred_classes = np.argmax(y_pred, axis=1)
+            y_test_classes = np.argmax(y_test, axis=1)
+            accuracy = accuracy_score(y_test_classes, y_pred_classes)
+            mse = mean_squared_error(y_test_classes, y_pred_classes)
 
             # Display the R2 score
-            st.write("R2 Score:", r2)
             st.write("Nilai MSE:", mse)
 
-            plot_rsquare = make_plot(
-                "r_square", "val_r_square", "Perubahan R2 Score pada tiap Epoch"
+            # Calculate and display additional metrics
+            micro_f1 = f1_score(y_test_classes, y_pred_classes, average="micro")
+            macro_f1 = f1_score(y_test_classes, y_pred_classes, average="macro")
+            weighted_f1 = f1_score(y_test_classes, y_pred_classes, average="weighted")
+            precision = precision_score(
+                y_test_classes, y_pred_classes, average="weighted"
             )
-            st.pyplot(plot_rsquare)
+            recall = recall_score(y_test_classes, y_pred_classes, average="weighted")
+
+            st.subheader("Additional Metrics")
+            st.write("Accuracy:", accuracy)
+            st.write("Micro F1 Score:", micro_f1)
+            st.write("Macro F1 Score:", macro_f1)
+            st.write("Weighted F1 Score:", weighted_f1)
+            st.write("Precision:", precision)
+            st.write("Recall:", recall)
+
+            # st.write(classification_report(y_test_classes, y_pred_classes))
+
+            plot_accuracy = make_plot(
+                "accuracy",
+                "val_accuracy",
+                "Perubahan Accuracy pada tiap Epoch",
+            )
+            st.pyplot(plot_accuracy)
 
             plot_loss = make_plot("loss", "val_loss", "Perubahan Loss pada tiap Epoch")
             st.pyplot(plot_loss)
 
-        # Create a Streamlit checkbox to trigger the file dialog and model saving
-        save_model = st.checkbox("Save Model")
 
-        if save_model:
-            try:
-                root = tk.Tk()
-                root.withdraw()
-                file_dialog = tk.Toplevel(root)
-                file_dialog.attributes("-topmost", True)
-                file_path = filedialog.asksaveasfilename(
-                    parent=file_dialog, defaultextension=".h5"
-                )
-                if file_path:
-                    model.save(file_path)
-                    st.success(f"Model saved successfully at: {file_path}")
-                    file_dialog.destroy()
-            except Exception as e:
-                st.error("An error occurred while saving the model: " + str(e))
-
-
-if __name__ == "__main__":
-    optimasi_func()
+optimasi_klasifikasi()
