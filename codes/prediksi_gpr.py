@@ -41,7 +41,7 @@ def predict_gpr():
             if uploaded_file.name.endswith(".csv"):
                 df = pd.read_csv(uploaded_file, sep=";")
             else:
-                df = pd.read_excel(uploaded_file, sep=";")
+                df = pd.read_excel(uploaded_file)
         except Exception as e:
             st.error(
                 f"Error: Unable to read the file. Please make sure it's a valid Excel or CSV file. Exception: {e}"

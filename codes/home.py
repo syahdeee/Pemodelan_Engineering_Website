@@ -6,6 +6,7 @@ from visualisasi import showHeatmap
 from klasifikasi.prediksi import prediksi_klasifikasi
 from prediksi_mlp import predict_mlp
 from optimasi_gpr import gpr_model
+from optimasi_gpr2 import gpr_model2
 from preprocessing import preprocessing
 import tensorflow as tf
 import tensorflow_addons as tfa
@@ -54,7 +55,12 @@ def home():
                 )
                 optimasi_klasifikasi()
         if selected_modelling == "GPR":
-            gpr_model()
+            options = ["1 input 1 output", "2 input 2 output"]
+            pilih_opsi = st.radio("Pilih opsi di bawah ini :", options)
+            if pilih_opsi == "1 input 1 output":
+                gpr_model()
+            else:
+                gpr_model2()
 
     if selected == "Prediksi Model":
         # horizontal Menu
@@ -76,7 +82,7 @@ def home():
             if selected_option == "Regresi":
                 predict_mlp()
             else:
-                prediksi_klasifikasi
+                prediksi_klasifikasi()
         if selected_pred == "GPR":
             predict_gpr()
 
