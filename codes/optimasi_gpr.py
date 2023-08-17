@@ -233,7 +233,7 @@ def gpr_model():
         # Show plot data
         # plot_train = training_plot(X, y, input, output)
         # st.pyplot(plot_train)
-        
+
         st.write("Pilih kernel yang ingin digunakan :")
         # Create a checkbox
         checkbox_rbf = st.checkbox("Radial Basis Function (RBF) Kernel")
@@ -569,8 +569,6 @@ def gpr_model():
 
                     hasil_data["matern"] = best_mse_matern
 
-                    st.write(hasil_data)
-
                     st.write("Best Hyperparameters:")
                     st.write("Nilai length scale terbaik:", best_length_scale)
                     st.write("Nilai Nu terbaik:", best_nu)
@@ -605,8 +603,6 @@ def gpr_model():
                     best_mse_rational = result.fun
 
                     hasil_data["rational"] = best_mse_rational
-
-                    st.write(hasil_data)
 
                     st.write("Best Hyperparameters:")
                     st.write("Nilai length scale terbaik:", best_length_scale)
@@ -647,8 +643,6 @@ def gpr_model():
                     best_mse_expsine = result.fun
 
                     hasil_data["expsine"] = best_mse_expsine
-
-                    st.write(hasil_data)
 
                     st.write("Best Hyperparameters:")
                     st.write("Nilai length scale terbaik:", best_length_scale)
