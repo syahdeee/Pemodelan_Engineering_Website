@@ -481,20 +481,20 @@ def optimasi_func():
             st.pyplot(plot_loss)
 
        
-        try:
-                root = tk.Tk()
-                root.withdraw()
-                file_dialog = tk.Toplevel(root)
-                file_dialog.attributes("-topmost", True)
-                file_path = filedialog.asksaveasfilename(
-                    parent=file_dialog, defaultextension=".h5"
-                )
-                if file_path:
-                    model.save(file_path)
-                    st.success(f"Model saved successfully at: {file_path}")
-                    file_dialog.destroy()
-        except Exception as e:
-                st.error("An error occurred while saving the model: " + str(e))
+            try:
+                    root = tk.Tk()
+                    root.withdraw()
+                    file_dialog = tk.Toplevel(root)
+                    file_dialog.attributes("-topmost", True)
+                    file_path = filedialog.asksaveasfilename(
+                        parent=file_dialog, defaultextension=".h5"
+                    )
+                    if file_path:
+                        model.save(file_path)
+                        st.success(f"Model saved successfully at: {file_path}")
+                        file_dialog.destroy()
+            except Exception as e:
+                    st.error("An error occurred while saving the model: " + str(e))
 
 
 if __name__ == "__main__":
