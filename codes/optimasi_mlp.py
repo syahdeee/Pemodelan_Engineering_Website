@@ -480,11 +480,8 @@ def optimasi_func():
             plot_loss = make_plot("loss", "val_loss", "Perubahan Loss pada tiap Epoch")
             st.pyplot(plot_loss)
 
-        # Create a Streamlit checkbox to trigger the file dialog and model saving
-        save_model = st.checkbox("Save Model")
-
-        if save_model:
-            try:
+       
+        try:
                 root = tk.Tk()
                 root.withdraw()
                 file_dialog = tk.Toplevel(root)
@@ -496,7 +493,7 @@ def optimasi_func():
                     model.save(file_path)
                     st.success(f"Model saved successfully at: {file_path}")
                     file_dialog.destroy()
-            except Exception as e:
+        except Exception as e:
                 st.error("An error occurred while saving the model: " + str(e))
 
 
