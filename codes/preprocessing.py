@@ -13,12 +13,16 @@ def preprocessing():
     file_pro = st.file_uploader(
         "Upload data dalam format xlsx/xls/csv", type=["xlsx", "xls", "csv"]
     )
-    display_button = st.button("Display Dataset")
 
     if file_pro is not None:
         try:
             if file_pro.name.endswith(".csv"):
-                df = pd.read_csv(file_pro, sep=",")
+                # Create a list of options for the selectbox
+                options_delimiter = [";", ",", ":", "|"]
+
+                # Create a selectbox widget
+                delimiter = st.selectbox("Pilih delimiter file yang akan digunakan : ", options_delimiter)
+                df = pd.read_csv(file_pro, sep=delimiter)
             else:
                 df = pd.read_excel(file_pro)
         except Exception as e:
@@ -26,9 +30,10 @@ def preprocessing():
                 f"Error: Unable to read the file. Please make sure it's a valid Excel or CSV file. Exception: {e}"
             )
             st.stop()
-
+    
+    display_button = st.button("Display Dataset")
+    
     if display_button and "df" in locals():
-        df = df[:100]
         st.write("Dataset:")
         st.write(df)
 

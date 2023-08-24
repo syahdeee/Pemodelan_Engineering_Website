@@ -198,12 +198,16 @@ def optimasi_func():
     uploaded_file = st.file_uploader(
         "Upload data dalam format xlsx/xls/csv", type=["xlsx", "xls", "csv"]
     )
-    display_button = st.button("Display Dataset")
 
     if uploaded_file is not None:
         try:
             if uploaded_file.name.endswith(".csv"):
-                df = pd.read_csv(uploaded_file, sep=";")
+                # Create a list of options for the selectbox
+                options_delimiter = [";", ",", ":", "|"]
+
+                # Create a selectbox widget
+                delimiter = st.selectbox("Pilih delimiter file yang akan digunakan : ", options_delimiter)
+                df = pd.read_csv(uploaded_file, sep=delimiter)
             else:
                 df = pd.read_excel(uploaded_file)
         except Exception as e:
@@ -211,9 +215,10 @@ def optimasi_func():
                 f"Error: Unable to read the file. Please make sure it's a valid Excel or CSV file. Exception: {e}"
             )
             st.stop()
-
+    
+    display_button = st.button("Display Dataset")
+    
     if display_button and "df" in locals():
-        # df = df[:100]
         st.write("Dataset:")
         st.write(df)
 

@@ -20,27 +20,31 @@ def predict_mlp():
     tf.keras.utils.get_custom_objects()["r_square"] = r_square
 
     nama_data = st.text_input("Masukkan nama data : ")
-    # File uploader
-    # File uploader
-    file_pro = st.file_uploader(
+       # File uploader
+    uploaded_file = st.file_uploader(
         "Upload data dalam format xlsx/xls/csv", type=["xlsx", "xls", "csv"]
     )
-    display = st.button("Display Dataset")
 
-    if file_pro is not None:
+    if uploaded_file is not None:
         try:
-            if file_pro.name.endswith(".csv"):
-                df = pd.read_csv(file_pro, sep=";")
+            if uploaded_file.name.endswith(".csv"):
+                # Create a list of options for the selectbox
+                options_delimiter = [";", ",", ":", "|"]
+
+                # Create a selectbox widget
+                delimiter = st.selectbox("Pilih delimiter file yang akan digunakan : ", options_delimiter)
+                df = pd.read_csv(uploaded_file, sep=delimiter)
             else:
-                df = pd.read_excel(file_pro)
+                df = pd.read_excel(uploaded_file)
         except Exception as e:
             st.error(
                 f"Error: Unable to read the file. Please make sure it's a valid Excel or CSV file. Exception: {e}"
             )
             st.stop()
-
-    if display and "df" in locals():
-        # df = df[:100]
+    
+    display_button = st.button("Display Dataset")
+    
+    if display_button and "df" in locals():
         st.write("Dataset:")
         st.write(df)
 
