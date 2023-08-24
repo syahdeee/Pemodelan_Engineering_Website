@@ -506,8 +506,6 @@ def optimasi_klasifikasi():
             st.write("Precision:", precision)
             st.write("Recall:", recall)
 
-            # st.write(classification_report(y_test_classes, y_pred_classes))
-
             plot_accuracy = make_plot(
                 "accuracy",
                 "val_accuracy",
