@@ -18,7 +18,7 @@ def preprocessing():
     if file_pro is not None:
         try:
             if file_pro.name.endswith(".csv"):
-                df = pd.read_csv(file_pro, sep=";")
+                df = pd.read_csv(file_pro, sep=",")
             else:
                 df = pd.read_excel(file_pro)
         except Exception as e:
