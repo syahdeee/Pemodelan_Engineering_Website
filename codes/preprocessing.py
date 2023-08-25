@@ -8,6 +8,26 @@ from io import BytesIO
 import numpy as np
 
 
+#Function metode IQR
+def InterQuartile(data_frame):
+  for i in data_frame.columns:
+    q1 = data_frame[i].quantile(0.25)
+    q3 = data_frame[i].quantile(0.75)
+    inter_quartile_range = q3-q1
+
+    terkecil = q1 - (inter_quartile_range *1.5)
+    terbesar = q3 + (inter_quartile_range * 1.5)
+
+    data_frame.loc[data_frame[i] > terbesar , i] = terbesar
+    data_frame.loc[data_frame[i] < terkecil , i] = terkecil
+
+#Function boxplot
+def boxplot(df):
+    sns.set(rc={'figure.figsize':(50,50), 'figure.dpi':100})
+    sns.boxplot(x="variable", y="value", data=pd.melt(df[df.columns]))
+
+    plt.show()
+
 def preprocessing():
     # File uploader
     file_pro = st.file_uploader(
@@ -38,12 +58,39 @@ def preprocessing():
         st.write(df)
 
     st.write("Pilih data preprocessing yang akan dilakukan :")
+    checkbox_missingvalue = st.checkbox("Data Cleaning")
+    checkbox_outlier = st.checkbox("Handling Outliers")
     checkbox_heatmap = st.checkbox("Visualisasi Heatmap")
     checkbox_fs = st.checkbox("Feature Selection dengan Random Forest")
     checkbox_normalisasi = st.checkbox("Normalisasi")
     checkbox_denormalisasi = st.checkbox("Denormalisasi")
 
     if file_pro is not None:
+        if checkbox_missingvalue:
+            st.subheader("DATA CLEANING")
+            n_missingvalue = df.isnull().sum().sum()
+            
+            st.write("Banyaknya missing value pada data awal saat ini : ", n_missingvalue)
+            
+            if st.button("CLEANING DATA"):
+                df = df.dropna()
+                
+                st.write("Jumlah missing value setelah dihapus : ", df.isnull().sum().sum())
+            
+        if checkbox_outlier:
+            st.subheader("HANDLING OUTLIERS")
+            st.write("Visualisasi boxplot data awal sebelum dilakukan handling outliers")
+            boxplot_awal = boxplot(df)
+            st.pyplot(boxplot_awal)
+            
+            if st.button("Hapus Outliers"):
+                InterQuartile(df)
+            
+                st.write("Visualisasi boxplot data sesudah dilakukan handling outliers")
+                boxplot_akhir = boxplot(df)
+                st.pyplot(boxplot_akhir)
+            
+            
         if checkbox_heatmap:
             st.subheader("VISUALISASI HEATMAP")
             opsi = ["Semua Feature", "Feature Pilihan"]
